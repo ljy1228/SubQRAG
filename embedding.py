@@ -30,14 +30,14 @@ all_embeddings = np.array(all_embeddings, dtype="float32")
 print("shape:", all_embeddings.shape)  # (N, D)
 
 
-np.save("wiki_embeddings.npy", all_embeddings)
+np.save("embdding_all/wiki_embeddings.npy", all_embeddings)
 
 import json
 with open("wiki_meta.jsonl", "w", encoding="utf-8") as f:
     for m in ids:
         f.write(json.dumps(m, ensure_ascii=False) + "\n")
 
-X = np.load("wiki_embeddings.npy")
+X = np.load("embdding_all/wiki_embeddings.npy")
 print("Loaded shape:", X.shape)
     
 
