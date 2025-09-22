@@ -9,7 +9,7 @@ DATA_PATH = Path("data/2wikimultihopqa_corpus.json")
 with open(DATA_PATH, "r", encoding="utf-8") as f:
     raw = json.load(f)
 
-model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2', trust_remote_code=True,device_map="auto")
+model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2', trust_remote_code=True)
 model.config.use_cache = False
 
 
