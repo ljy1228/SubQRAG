@@ -13,7 +13,7 @@ data_question_path = "SubQRAG/data/2wikimultihopqa.json"  # your actual local da
 with open(data_question_path, "r", encoding="utf-8") as f:
     data = json.load(f)   
 
-out_path = ""  #output_path
+out_path = "decompose_data/decompose_2wikimultihopqa.jsonl"  #output_path
 
 with open(out_path, "a", encoding="utf-8") as fout:
     for i, item in enumerate(data, 1):  
