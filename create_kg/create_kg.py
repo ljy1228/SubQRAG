@@ -10,10 +10,10 @@ from typing import Tuple, Optional
 #DATA_PATH represents the path to the input JSON file containing the corpus.
 #OUT_PATH is the path where the final knowledge graph will be saved.
 DATA_PATH = Path("lveval_corpus.json")
-OUT_PATH = Path("lveval_knowledge.pkl")
+OUT_PATH = Path("kg_dataset/lveval_knowledge.pkl")
 OUT_TMP = OUT_PATH.with_suffix(".pkl.tmp")
-CKPT_PATH = Path("lveval_checkpoint.pkl")
-CKPT_TMP = Path("lveval_checkpoint.pkl.tmp")
+CKPT_PATH = Path("kg_dataset/lveval_checkpoint.pkl")
+CKPT_TMP = Path("kg_dataset/lveval_checkpoint.pkl.tmp")
 
 def atomic_dump(obj, path: Path, tmp: Path):
     with open(tmp, "wb") as f:

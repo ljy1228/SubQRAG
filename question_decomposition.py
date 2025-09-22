@@ -8,7 +8,7 @@ client = OpenAI(
 )
 
 
-data_question_path = "SubQRAG/data/2wikimultihopqa.json"  # your actual local data file path.for example, 2wikimultihopqa.json
+data_question_path = "data/2wikimultihopqa.json"  # your actual local data file path.for example, 2wikimultihopqa.json
 
 with open(data_question_path, "r", encoding="utf-8") as f:
     data = json.load(f)   
