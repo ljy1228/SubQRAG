@@ -11,7 +11,12 @@
 ```sh
 conda create -n subqrag python=3.10
 conda activate subqrag
+cd SubQRAG
+pip install -r requirements.txt
 ```
-Initialize the environmental variables and activate the environment:
+## 📚 Datasets
+
+```sh
+[text](https://huggingface.co/datasets/osunlp/HippoRAG_2)
 
 ```sh
