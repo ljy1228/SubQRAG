@@ -14,22 +14,36 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import numpy as np
 from kg import *
 in_path = "decompose_data/decompose_2wikimultihopqa.jsonl"
-
 kg_path = 'kg_dataset/2wikimultihopqa_knowledge.pkl'
-DATA_PATH = Path("SubQRAG/data/2wikimultihopqa_corpus.json")
 
+kb = build_kb_from_pickle("kg_path",
+                          out_path="/mnt/ljy/lag_better/kg_dataset/dynamic_kb.pkl") 
+
+
+DATA_PATH = Path("SubQRAG/data/2wikimultihopqa_corpus.json")
+kg_path_update = "kg_dataset/2wikimultihopqa_dynamic_kb.pkl"
 client = OpenAI(
   base_url="",
   api_key="",
 )
 
-with open(kg_path, "rb") as f:
-    entities_loaded, attributes_loaded, triples_loaded = pickle.load(f)
+bad_keywords = [
+    "not provided",
+    "facts",
+    "no answer",
+    "unknown",
+    "n/a",
+    "missing",
+    "null",
+    "undefined"
+]
+
+
 
 with open(DATA_PATH, "r", encoding="utf-8") as f:
     corpus = json.load(f)
     
-sentence_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+sentence_model = SentenceTransformer('/mnt/ljy/lag_better/all-MiniLM-L6-v2')
 data = []
 with open(in_path, "r", encoding="utf-8") as f:
     for line in f:
@@ -40,7 +54,7 @@ with open(in_path, "r", encoding="utf-8") as f:
 
 
 X = np.load("embdding_all/wiki_embeddings.npy")
-out_path = "result/wiki/wiki.jsonl"
+out_path = "result/2wiki/2wiki_update_graph.jsonl"
 placeholder_pat = re.compile(r"#(\d+)")
 
 def resolve_placeholders(text, answers):
@@ -53,59 +67,57 @@ def extract_rewrite_tag(text):
     m = re.search(r"<rewrite>(.*?)</rewrite>", text, flags=re.DOTALL | re.IGNORECASE)
     return m.group(1).strip() if m else text.strip()
 
-kb = KnowledgeBase()
-for (subject, predicate), obj in triples_loaded.items():
-    if isinstance(obj, str):
-        tail = obj.strip()
-    elif isinstance(obj, list):
-        tail = ", ".join([str(o).strip() for o in obj])
-    else:
-        tail = str(obj).strip()
-    kb.add_relation({
-        "head": subject.strip(),
-        "type": predicate.strip(),
-        "tail": tail
-    })
+
+kb = build_kb_from_pickle("/mnt/ljy/lag_better/kg_dataset/dynamic_kb.pkl",
+                          out_path="/mnt/ljy/lag_better/kg_dataset/dynamic_kb.pkl")   #kg
 
 
 for i, item in enumerate(data, 1):
     decomposition = item.get("decomposition", "")
-    matches = re.findall(r'(\d+)\.\s*(.*?)(?=\n\d+\.|$)', decomposition, flags=re.S)  # extracted decomposed questions
-    questions = [q.strip() for _, q in matches]  # get sub-questions
+    matches = re.findall(r'(\d+)\.\s*(.*?)(?=\n\d+\.|$)', decomposition, flags=re.S)
+    questions = [q.strip() for _, q in matches]  #decomposition sub-questions
     print("all_subqueation",questions)
-    retrival_article = []   # retrieved related articles
+    retrival_article = []   #relevant article
     
-    response = ""   # answer
-    answers = []    # answers
+    response = ""   
+    answers = []    #answer
     
     facts = []
-    for idx, original_question in enumerate(questions):  # iterate over each sub-question
+    for idx, original_question in enumerate(questions):  #Iterate over each sub-question
         if idx == 0:
-            question = original_question  # the first round is the original question, no need to rewrite like #1, #2
+            question = original_question  #The first round is the original question, no need to rewrite it with #1, #2, etc.
         else:
-            question = rewrite_with_llm(original_question, answers[:idx], client)  # rewrite the question
-                
-        nodes, rel_index, triple_index = build_indices(kb.relations)
-        
-        
-        support = select_support_triples(question, kb.relations, sentence_model, topk=5)
-        
-        print("support_5",idx,support)
+            question = rewrite_with_llm(original_question, answers[:idx], client)  #rewrite
+            
+        nodes, rel_index, triple_index = build_indices([
+                    {"head": r.head, "type": r.relation, "tail": r.tail}
+                    for r in kb.relations
+                ])  
+        support = select_support_triples(question, kb.relations, sentence_model, topk=10) 
+        print("support_10",idx,support)
         response,fact = answer_with_triples_llm_simple(question, support, client)
-        
-        print("response",response)
-        print("fact",fact)
-        if "not provided" in response.lower() or "facts" in response.lower() :
+    
+        if any(kw in response.lower() for kw in bad_keywords):
+            print("error")
             help_article = ''
-            question_embedding = sentence_model.encode(question)  # encode the question into embedding
-            similarities = sentence_model.similarity(question_embedding, X).tolist()  # compute similarity between query and article embeddings
-            top3_idx = np.argsort(similarities[0])[-3:][::-1]  # select the top 3 articles, get their ids
+            question_embedding = sentence_model.encode(question)  # Convert the question into an embedding
+            similarities = sentence_model.similarity(question_embedding, X).tolist()  # Compute similarity between the query and article embeddings
+            top3_idx = np.argsort(similarities[0])[-3:][::-1]  # Select the top 3 articles and get their IDs
+
             for top_item in top3_idx:
                 help_article = help_article + corpus[top_item].get("text", "")
-                response = answer_with_article(help_article, question, client)
+            response,fact = answer_with_article_triple(help_article, question, client)
+            if not any(kw in response.lower() for kw in bad_keywords):
+                print("corrected")
+                update_triples = from_small_text_to_triples(help_article, client)
+                added = kb.add_relations_from_triples(update_triples, provenance="hotpotqa_article_42")
+                print(fact)
+                kb.save(kg_path_update)
+
+                
         facts.append(fact)
         answers.append(response)
-        print("question",question)
+        
         print("response",response)
 
     final_question = item.get("question", "")
@@ -118,3 +130,8 @@ for i, item in enumerate(data, 1):
 
     with open(out_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+ 
+        
+        
+        
