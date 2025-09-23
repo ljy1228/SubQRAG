@@ -17,6 +17,8 @@ pip install -r requirements.txt
 ## 📚 Datasets
 
 ```sh
+We follow the same dataset as Hipporag.
+
 https://huggingface.co/datasets/osunlp/HippoRAG_2
 
-```sh
+```
