@@ -22,6 +22,9 @@ We follow the same dataset as HippoRAG.
 https://huggingface.co/datasets/osunlp/HippoRAG_2
 
 ```
+
+You can modify the parameters according to your needs.
+
 ## ✨ Offline Indexing (Pre-constructing a Knowledge Graph)
 
 ```sh
@@ -48,7 +51,7 @@ Retrieval+Update+Generation
 
 ```sh
 
-python subq_rag.py --decomp_path decompose_data/decompose_2wikimultihopqa.jsonl --corpus_path data/2wikimultihopqa_corpus.json --emb_path embdding_all/wiki_embeddings.npy --kg_pickle_in kg_dataset/dynamic_kb.pkl --kg_pickle_out kg_dataset/2wikimultihopqa_dynamic_kb.pkl --sent_model_path sentence-transformers/all-MiniLM-L6-v2 --out_path result/2wiki/2wiki_update_graph.jsonl --openai_base_url "" --openai_api_key "$OPENAI_API_KEY"
+python subq_rag.py --decomp_path decompose_data/decompose_2wikimultihopqa.jsonl --corpus_path data/2wikimultihopqa_corpus.json --emb_path embdding_all/wiki_embeddings.npy --kg_pickle_in kg_dataset/dynamic_kb.pkl --kg_pickle_out kg_dataset/2wikimultihopqa_dynamic_kb.pkl --sent_model_path sentence-transformers/all-MiniLM-L6-v2 --out_path result/wiki/wiki.jsonl --openai_base_url "" --openai_api_key "$OPENAI_API_KEY"
 ```
 ## 📜 Evaluation
 
@@ -58,7 +61,9 @@ python make_short_answers.py --in_path result/wiki/wiki.jsonl --out_path result/
 ```
 EM + F1
 ```sh
-python eval/eval_str.py --file_path result/wiki_zh_same_length.jsonl
+python eval/eval_str.py --file_path result/wiki/wiki_same_length.jsonl
 ```
 
+
 If you find this project helpful, feel free to ⭐️ Star and 🔁 Fork it!
+Please feel free to open an issue or PR if you have any questions or suggestions.
