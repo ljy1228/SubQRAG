@@ -29,4 +29,10 @@ https://huggingface.co/datasets/osunlp/HippoRAG_2
 python create_kg/create_kg.py --data_path data/2wikimultihopqa_corpus.json --out_path data/kg/2wikimultihopqa_corpus.pkl   --ckpt_path /data/kg/2wikimultihopqa_corpus.pkl 
 
 ```
-## 🚀 
+## 🚀 Decompose the subproblems
+
+```sh
+
+python question_decomposition.py --data_path data/2wikimultihopqa.json --out_path decompose_data/decompose_2wikimultihopqa.jsonl
+
+```
