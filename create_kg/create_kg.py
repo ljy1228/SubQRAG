@@ -1,19 +1,29 @@
-from create_kg_utils import *  
+from create_kg_utils import *
 from pathlib import Path
 from tqdm import tqdm
 import json
 import pickle
 import os
 from typing import Tuple, Optional
+import argparse
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Build knowledge graph from corpus.")
+    parser.add_argument("--data_path", type=Path, default=Path("lveval_corpus.json"),
+                        help="Path to input JSON corpus.")
+    parser.add_argument("--out_path", type=Path, default=Path("kg_dataset/lveval_knowledge.pkl"),
+                        help="Path to final knowledge graph snapshot (.pkl).")
+    parser.add_argument("--ckpt_path", type=Path, default=Path("kg_dataset/lveval_checkpoint.pkl"),
+                        help="Path to checkpoint file (.pkl).")
+    return parser.parse_args()
 
-#DATA_PATH represents the path to the input JSON file containing the corpus.
-#OUT_PATH is the path where the final knowledge graph will be saved.
-DATA_PATH = Path("lveval_corpus.json")
-OUT_PATH = Path("kg_dataset/lveval_knowledge.pkl")
-OUT_TMP = OUT_PATH.with_suffix(".pkl.tmp")
-CKPT_PATH = Path("kg_dataset/lveval_checkpoint.pkl")
-CKPT_TMP = Path("kg_dataset/lveval_checkpoint.pkl.tmp")
+# 解析命令行参数，设置原来的“常量”
+_args = parse_args()
+DATA_PATH: Path = _args.data_path
+OUT_PATH: Path = _args.out_path
+OUT_TMP: Path = OUT_PATH.with_suffix(".pkl.tmp")
+CKPT_PATH: Path = _args.ckpt_path
+CKPT_TMP: Path = CKPT_PATH.with_suffix(".pkl.tmp")
 
 def atomic_dump(obj, path: Path, tmp: Path):
     with open(tmp, "wb") as f:
@@ -50,16 +60,12 @@ def try_save_checkpoint(processed_idx: int, union_kb: KB):
 def try_load_checkpoint() -> Tuple[int, Optional[KB]]:
     if not CKPT_PATH.exists():
         return -1, None
-
     with open(CKPT_PATH, "rb") as f:
         payload = pickle.load(f)
-
     processed_idx = payload.get("processed_idx", -1)
     mode = payload.get("mode", "kb")
-
     if mode == "kb" and "kb" in payload:
         return processed_idx, payload["kb"]
-
     if mode == "triples" and "triples" in payload:
         kb = KB()
         for h, rel, t in payload["triples"]:
@@ -69,19 +75,14 @@ def try_load_checkpoint() -> Tuple[int, Optional[KB]]:
 
 def save_snapshot(union_kb: KB):
     nodes, rel_index, triple_index = build_indices(union_kb.relations)
-    atomic_dump((nodes, rel_index, triple_index), OUT_TMP, OUT_TMP)  
-    with open(OUT_TMP, "wb") as f:
-        pickle.dump((nodes, rel_index, triple_index), f)
-    os.replace(OUT_TMP, OUT_PATH)
+    atomic_dump((nodes, rel_index, triple_index), OUT_PATH, OUT_TMP)
 
 def main():
-    corpus = load_corpus()  
+    corpus = load_corpus()
     processed_idx, union_kb = try_load_checkpoint()
     if union_kb is None:
         union_kb = KB()
-    start_idx = processed_idx + 1
-    if start_idx < 0:
-        start_idx = 0
+    start_idx = max(processed_idx + 1, 0)
 
     pbar = tqdm(range(start_idx, len(corpus)), desc="Building KB (resume)")
     for i in pbar:
@@ -91,10 +92,12 @@ def main():
             kb_piece = from_small_text_to_kb(text, verbose=False)
             for r in kb_piece.relations:
                 union_kb.add_relation(r)
+
+            # 即时快照
             nodes, rel_index, triple_index = build_indices(union_kb.relations)
-            with open(OUT_TMP, "wb") as f:
-                pickle.dump((nodes, rel_index, triple_index), f)
-            os.replace(OUT_TMP, OUT_PATH)
+            atomic_dump((nodes, rel_index, triple_index), OUT_PATH, OUT_TMP)
+
+            # 保存断点
             try_save_checkpoint(processed_idx=i, union_kb=union_kb)
 
         except Exception as e:
@@ -109,7 +112,6 @@ def main():
         print("Entities count:", len(entities_loaded))
         print("Attributes count:", len(attributes_loaded))
         print("Triples count:", triples_loaded)
-
 
 if __name__ == "__main__":
     main()

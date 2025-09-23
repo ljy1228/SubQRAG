@@ -25,3 +25,10 @@ https://huggingface.co/datasets/osunlp/HippoRAG_2
 ## ✨ Offline Indexing (Pre-constructing a Knowledge Graph)
 
 ```sh
+
+python create_kg/create_kg.py 
+  --data_path data/2wikimultihopqa_corpus.json 
+  --out_path data/kg/2wikimultihopqa_corpus.pkl 
+  --ckpt_path /data/kg/2wikimultihopqa_corpus.pkl
+
+```
