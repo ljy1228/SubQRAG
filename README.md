@@ -17,6 +17,6 @@ pip install -r requirements.txt
 ## 📚 Datasets
 
 ```sh
-[text](https://huggingface.co/datasets/osunlp/HippoRAG_2)
+https://huggingface.co/datasets/osunlp/HippoRAG_2
 
 ```sh
