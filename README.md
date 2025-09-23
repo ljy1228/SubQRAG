@@ -15,10 +15,11 @@ cd SubQRAG
 pip install -r requirements.txt
 ```
 ## 📚 Datasets
-We follow the same dataset as HippoRAG.
+We follow the same dataset as HippoRAG. 
+[<img align="center" src="https://img.shields.io/badge/🤗 Dataset-HippoRAG 2-yellow" />](https://huggingface.co/datasets/osunlp/HippoRAG_2/tree/main)
 
 ```sh
-🤗 https://huggingface.co/datasets/osunlp/HippoRAG_2
+https://huggingface.co/datasets/osunlp/HippoRAG_2
 
 ```
 ## ✨ Offline Indexing (Pre-constructing a Knowledge Graph)
