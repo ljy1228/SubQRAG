@@ -26,9 +26,7 @@ https://huggingface.co/datasets/osunlp/HippoRAG_2
 
 ```sh
 
-python create_kg/create_kg.py 
-  --data_path data/2wikimultihopqa_corpus.json 
-  --out_path data/kg/2wikimultihopqa_corpus.pkl 
-  --ckpt_path /data/kg/2wikimultihopqa_corpus.pkl
+python create_kg/create_kg.py --data_path data/2wikimultihopqa_corpus.json --out_path data/kg/2wikimultihopqa_corpus.pkl   --ckpt_path /data/kg/2wikimultihopqa_corpus.pkl 
 
 ```
+## 🚀 
