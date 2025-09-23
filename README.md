@@ -15,10 +15,9 @@ cd SubQRAG
 pip install -r requirements.txt
 ```
 ## 📚 Datasets
-
-```sh
 We follow the same dataset as Hipporag.
 
+```sh
 https://huggingface.co/datasets/osunlp/HippoRAG_2
 
 ```
